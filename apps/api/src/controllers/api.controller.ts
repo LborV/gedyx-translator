@@ -1,5 +1,5 @@
-import { Controller, Get, Inject } from '@nestjs/common';
-import { MqttServiceProducer } from 'libs/mqtt/mqtt.service';
+import { Controller, Get, Inject } from '@nestjs/common'
+import { MqttServiceProducer } from 'libs/mqtt/mqtt.service'
 
 @Controller('api')
 export class ApiController {
@@ -7,6 +7,6 @@ export class ApiController {
 
   @Get('ping')
   async ping() {
-    return 'pong';
+    return 'pong'
   }
 }

@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { getMetadataArgsStorage } from 'typeorm';
+import { Injectable } from '@nestjs/common'
+import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from '@nestjs/typeorm'
+import { getMetadataArgsStorage } from 'typeorm'
 
 @Injectable()
 export class TypeOrmService implements TypeOrmOptionsFactory {
@@ -14,10 +14,10 @@ export class TypeOrmService implements TypeOrmOptionsFactory {
       entities: getMetadataArgsStorage().tables.map((t) => t.target),
       synchronize: true,
       extra: {
-        max: 10,
-      },
-    } as TypeOrmModuleOptions;
+        max: 10
+      }
+    } as TypeOrmModuleOptions
 
-    return options;
+    return options
   }
 }

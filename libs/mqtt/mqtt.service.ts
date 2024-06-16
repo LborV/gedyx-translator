@@ -27,7 +27,7 @@ export class MqttServiceProducer {
       })
     } catch (err) {
       throw new RpcException({
-        ...(err.error || err),
+        err,
         name: RpcException.name
       })
     }

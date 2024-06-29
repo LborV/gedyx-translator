@@ -43,4 +43,9 @@ export class ApiController {
   ) {
     return this.documentsService.create(projectId, data)
   }
+
+  @Get('document/:id/:version?')
+  async getDocument(@Param('id') id: number, @Param('version') version: number = 1){
+    return this.documentsService.get(id, version)
+  }
 }

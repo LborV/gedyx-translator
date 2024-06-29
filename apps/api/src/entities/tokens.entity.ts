@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToMany, OneToMany } from 'typeorm'
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from 'typeorm'
 import { BaseEntity } from './base.entity'
 import { Documents } from './documents.entity'
 
@@ -7,7 +7,7 @@ export class Tokens extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   name: string
 
-  @OneToMany(() => Documents, (document) => document.id)
+  @ManyToOne(() => Documents, (document) => document.id)
   document: Documents
 
   @Column({ type: 'bigint' })
@@ -19,12 +19,18 @@ export class Tokens extends BaseEntity {
   @Column({ type: 'text' })
   value: string
 
-  @OneToMany(() => Tokens, (token) => token.id)
-  closestToken: Tokens
+  @OneToOne(() => Tokens, (token) => token.id)
+  @JoinColumn()
+  closeToken?: Tokens
 
   @ManyToMany(() => Tokens, (token) => token.id)
+  @JoinTable()
   children: Tokens[]
 
   @ManyToMany(() => Tokens, (token) => token.id)
+  @JoinTable()
   subTokens: Tokens[]
+
+  @Column({ type: 'int' })
+  level: number
 }

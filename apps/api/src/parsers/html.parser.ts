@@ -48,14 +48,14 @@ export class html extends Parser {
     return data
   }
 
+  protected nonClosingPattern = 'br,img,input,hr,meta,link,area,base,col,embed,source,track,wbr';
+
   tokens = {
     nonClosingTags: {
-      pattern:
-        '<*|[br,img,input,hr,meta,link,area,base,col,embed,source,track,wbr]*>',
-      inner: ['attribute', 'tagName']
+      pattern: `<*(<)|[${this.nonClosingPattern}]>`,
     },
     closeTag: {
-      pattern: '<*(<)/*>'
+      pattern: `<*/*(<,${this.nonClosingPattern})*>`,
     },
     attribute: {
       pattern: ` *=|['*',"*"]`,
@@ -71,7 +71,7 @@ export class html extends Parser {
       inner: ['attribute', 'tagName']
     },
     core: {
-      tokens: ['openTag', 'textData'],
+      tokens: ['openTag', 'nonClosingTags', 'textData'],
       after: 'join'
     },
     textData: {

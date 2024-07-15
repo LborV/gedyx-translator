@@ -45,7 +45,10 @@ export class ApiController {
   }
 
   @Get('document/:id/:version?')
-  async getDocument(@Param('id') id: number, @Param('version') version: number = 1){
+  async getDocument(
+    @Param('id') id: number,
+    @Param('version') version: number = 1
+  ) {
     return this.documentsService.get(id, version)
   }
 }

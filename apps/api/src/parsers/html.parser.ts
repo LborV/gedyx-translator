@@ -80,3 +80,22 @@ export class html extends Parser {
     }
   }
 }
+
+
+export class normalizeHtml extends Parser {
+  protected nonClosingPattern =
+  'br,img,input,hr,meta,link,area,base,col,embed,source,track,wbr'
+
+  tokens = {
+    nonClosingTags: {
+      pattern: `</|[${this.nonClosingPattern}]>`
+    },
+    core: {
+      tokens: ['nonClosingTags'],
+      after: 'join'
+    },
+    textData: {
+      pattern: '?'
+    }
+  }
+}

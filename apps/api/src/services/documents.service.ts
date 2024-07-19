@@ -4,7 +4,7 @@ import { Repository } from 'typeorm/repository/Repository'
 import { Projects } from '../entities/projects.entity'
 import { Documents } from '../entities/documents.entity'
 import MurmurHash3 from 'imurmurhash'
-import { html } from '../parsers/html.parser'
+import { html, normalizeHtml } from '../parsers/html.parser'
 import { Tokens } from '../entities/tokens.entity'
 import { TTokenizeResult, Token } from '../classes/tokenizer.class'
 
@@ -162,8 +162,16 @@ export class DocumentsService {
     }
 
     await this.documentsRepository.save(document)
+
+    // TODO: make there parser strategy
+    const preParser = new normalizeHtml()
+    const preTokenizer = preParser.init()
+    const a = preTokenizer.tokenize(data.value)
     const tokenizer = new html().init()
-    const tokens = tokenizer.tokenize(data.value)
+
+    console.log(preParser.parse(a));
+
+    const tokens = tokenizer.tokenize(preParser.parse(a))
 
     const coreToken = new Tokens()
     coreToken.name = 'core'

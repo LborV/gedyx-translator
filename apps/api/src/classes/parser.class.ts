@@ -1,12 +1,28 @@
 import { PatternFabric } from './pattern.class'
 import { TTokenizeResult, Token, Tokenizer } from './tokenizer.class'
 
+export type TParserToken = {
+  pattern: string
+  close?: string
+  inner?: string[]
+  after?: string
+}
+
+export type TParserCoreToken = {
+  tokens: string[]
+  after?: string
+}
+
+export type TParserTokens = {
+  core: TParserCoreToken;
+  [key: string]: TParserCoreToken | TParserToken;
+};
+
 export class Parser {
-  protected tokens: {
-    core: {
-      tokens: string[]
-      after?: string
-    }
+  protected tokens: TParserTokens;
+
+  protected parse(tokens: TTokenizeResult[]): string {
+    return '';
   }
 
   private parsePattern(pattern: string): PatternFabric {
@@ -124,17 +140,17 @@ export class Parser {
         return
       }
 
-      const parsedPattern = this.parsePattern(this.tokens[tokenName].pattern)
+      const parsedPattern = this.parsePattern((this.tokens[tokenName] as TParserToken).pattern)
 
       tokens.push(
         new Token(
           tokenName,
           parsedPattern,
-          this.tokens[tokenName].close
-            ? tokens.find((t) => t.name === this.tokens[tokenName].close)
+          (this.tokens[tokenName] as TParserToken).close
+            ? tokens.find((t) => t.name === (this.tokens[tokenName] as TParserToken).close)
             : null,
-          this.tokens[tokenName].inner
-            ? this.tokens[tokenName].inner.map((t) =>
+            (this.tokens[tokenName] as TParserToken).inner
+            ? (this.tokens[tokenName] as TParserToken).inner.map((t) =>
                 tokens.find((token) => token.name === t)
               )
             : [],

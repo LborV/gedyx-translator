@@ -24,6 +24,13 @@ export class Tokenizer {
         throw new Error(`Close token not found for token ${token.name}`)
       }
 
+      // console.log(token);
+      // var util = require('util');
+      // console.log(util.inspect(closeTokens, { showHidden: true, depth: 1000 }));
+      
+      // console.log(openTokens.length, closeTokens.length);
+      
+
       if (openTokens.length !== closeTokens.length) {
         throw new Error(
           `Open and close tokens count not equal for token ${token.name}`

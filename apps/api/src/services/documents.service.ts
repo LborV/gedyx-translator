@@ -7,6 +7,7 @@ import MurmurHash3 from 'imurmurhash'
 import { html, normalizeHtml } from '../parsers/html.parser'
 import { Tokens } from '../entities/tokens.entity'
 import { TTokenizeResult, Token } from '../classes/tokenizer.class'
+import { unescape } from 'querystring'
 
 @Injectable()
 export class DocumentsService {
@@ -166,11 +167,8 @@ export class DocumentsService {
     // TODO: make there parser strategy
     const preParser = new normalizeHtml()
     const preTokenizer = preParser.init()
-    const a = preTokenizer.tokenize(data.value)
+    const a = preTokenizer.tokenize(unescape(data.value))
     const tokenizer = new html().init()
-
-    console.log(preParser.parse(a));
-
     const tokens = tokenizer.tokenize(preParser.parse(a))
 
     const coreToken = new Tokens()

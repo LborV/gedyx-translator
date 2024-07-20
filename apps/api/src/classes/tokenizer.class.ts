@@ -96,7 +96,7 @@ export class Tokenizer {
     let tokensList = this.tokens
 
     if (parentToken == null) {
-      this.checkStringForClosing(str)
+      // this.checkStringForClosing(str)
     } else {
       tokensList = [parentToken.closeToken, ...tokensList]
     }

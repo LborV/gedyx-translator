@@ -53,10 +53,10 @@ export class html extends Parser {
 
   tokens = {
     nonClosingTags: {
-      pattern: `</|[${this.nonClosingPattern}]*(<,${this.nonClosingPattern})>`
+      pattern: `</|[${this.nonClosingPattern}]*(<,=,${this.nonClosingPattern})>`
     },
     closeTag: {
-      pattern: `</*(<,${this.nonClosingPattern})>`
+      pattern: `</*(<,=,${this.nonClosingPattern})>`
     },
     attribute: {
       pattern: ` *=|['*',"*"]`,
@@ -72,13 +72,13 @@ export class html extends Parser {
       inner: ['attribute', 'tagName']
     },
     scriptTag: {
-      pattern: '<script*,</script>'
+      pattern: '<script*</script>'
     },
     styleTag: {
-      pattern: '<style*,</style>'
+      pattern: '<style*</style>'
     },
     svgTag: {
-      pattern: '<svg*,</svg>'
+      pattern: '<svg*</svg>'
     },
     core: {
       tokens: ['svgTag', 'scriptTag', 'styleTag', 'nonClosingTags', 'openTag', 'textData'],
@@ -115,8 +115,12 @@ export class normalizeHtml extends html {
   }
 
   tokens = {
+    nonClosingTags: {
+      pattern: `</|[${this.nonClosingPattern}]*(<,${this.nonClosingPattern})>`,
+      after: 'normalizeCloseTag'
+    },
     closeTag: {
-      pattern: `<*(<)/*(<)>`,
+      pattern: `<*(<,=)/*(<,=)>`,
       after: 'normalizeCloseTag'
     },
     core: {

@@ -16,7 +16,7 @@ export class Tokens extends BaseEntity {
   @Column({ type: 'text' })
   hash: string
 
-  @Column({ type: 'text' })
+  @Column({ type: 'longtext' })
   value: string
 
   @OneToOne(() => Tokens, (token) => token.id)

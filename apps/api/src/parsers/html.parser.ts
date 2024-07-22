@@ -55,9 +55,9 @@ export class html extends Parser {
     comment: {
       pattern: '<!--*-->'
     },
-    // nonClosingTags: {
-    //   pattern: `</|[${this.nonClosingPattern}]*(<,=,${this.nonClosingPattern})>`
-    // },
+    nonClosingTags: {
+      pattern: `<*(<,=,${this.nonClosingPattern})|[${this.nonClosingPattern}]*(<,=,${this.nonClosingPattern})>`
+    },
     closeTag: {
       pattern: `<*(<,=)/*(<,=)>`
     },
@@ -89,7 +89,7 @@ export class html extends Parser {
         'svgTag',
         'scriptTag',
         'styleTag',
-        'closeTag',
+        'nonClosingTags',
         'openTag',
         'textData'
       ],

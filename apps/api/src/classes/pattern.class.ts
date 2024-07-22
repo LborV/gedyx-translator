@@ -92,11 +92,13 @@ export class PatternPartAny extends PatternPart {
 
     let index = 0
 
-    while (index < str.length) {      
-      for(let i = 0; i < this.exclude.length; i++) {
-        if(this.exclude[i].length == 1 && str[index] === this.exclude[i]) {
-            return -1
-        } else if (str.slice(index, index + this.exclude[i].length) === this.exclude[i]) {
+    while (index < str.length) {
+      for (let i = 0; i < this.exclude.length; i++) {
+        if (this.exclude[i].length == 1 && str[index] === this.exclude[i]) {
+          return -1
+        } else if (
+          str.slice(index, index + this.exclude[i].length) === this.exclude[i]
+        ) {
           return -1
         }
       }

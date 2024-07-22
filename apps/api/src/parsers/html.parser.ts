@@ -1,4 +1,4 @@
-import { Parser, TParserCoreToken, TParserTokens } from '../classes/parser.class'
+import { Parser, TParserTokens } from '../classes/parser.class'
 import { TTokenizeResult } from '../classes/tokenizer.class'
 
 export class html extends Parser {
@@ -52,11 +52,14 @@ export class html extends Parser {
     'br,img,input,hr,meta,link,area,base,col,embed,source,track,wbr'
 
   tokens = {
-    nonClosingTags: {
-      pattern: `</|[${this.nonClosingPattern}]*(<,=,${this.nonClosingPattern})>`
+    comment: {
+      pattern: '<!--*-->'
     },
+    // nonClosingTags: {
+    //   pattern: `</|[${this.nonClosingPattern}]*(<,=,${this.nonClosingPattern})>`
+    // },
     closeTag: {
-      pattern: `</*(<,=,${this.nonClosingPattern})>`
+      pattern: `<*(<,=)/*(<,=)>`
     },
     attribute: {
       pattern: ` *=|['*',"*"]`,
@@ -81,50 +84,15 @@ export class html extends Parser {
       pattern: '<svg*</svg>'
     },
     core: {
-      tokens: ['svgTag', 'scriptTag', 'styleTag', 'nonClosingTags', 'openTag', 'textData'],
-      after: 'join'
-    },
-    textData: {
-      pattern: '?'
-    }
-  } as TParserTokens
-}
-
-export class normalizeHtml extends html {
-  normalizeCloseTag(data: TTokenizeResult) {
-    data.value = '</' + data.value.replace('/', '').replace('>', '').replace('<', '').trim() + '>'
-    return data
-  }
-
-  parse(tokens: TTokenizeResult[]): string {
-    let result = '';
-
-    tokens.forEach((token) => {
-      result += token.value
-
-      if(token.name === 'scriptTag') {
-        return;
-      }
-
-      if (token.childs.length) {
-        result += this.parse(token.childs)
-      }
-    })
-
-    return result
-  }
-
-  tokens = {
-    nonClosingTags: {
-      pattern: `</|[${this.nonClosingPattern}]*(<,${this.nonClosingPattern})>`,
-      after: 'normalizeCloseTag'
-    },
-    closeTag: {
-      pattern: `<*(<,=)/*(<,=)>`,
-      after: 'normalizeCloseTag'
-    },
-    core: {
-      tokens: ['closeTag', 'scriptTag', 'textData'],
+      tokens: [
+        'comment',
+        'svgTag',
+        'scriptTag',
+        'styleTag',
+        'closeTag',
+        'openTag',
+        'textData'
+      ],
       after: 'join'
     },
     textData: {

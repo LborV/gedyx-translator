@@ -56,10 +56,10 @@ export class html extends Parser {
       pattern: '<!--*-->'
     },
     nonClosingTags: {
-      pattern: `<*(<,=,${this.nonClosingPattern})|[${this.nonClosingPattern}]*(<,=,${this.nonClosingPattern})>`
+      pattern: `</|[${this.nonClosingPattern}]*(<,=,${this.nonClosingPattern})>`
     },
     closeTag: {
-      pattern: `<*(<,=)/*(<,=)>`
+      pattern: `</*(<,=,${this.nonClosingPattern})>`
     },
     attribute: {
       pattern: ` *=|['*',"*"]`,

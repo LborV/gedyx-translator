@@ -14,16 +14,12 @@ export type TParserCoreToken = {
 }
 
 export type TParserTokens = {
-  core: TParserCoreToken;
-  [key: string]: TParserCoreToken | TParserToken;
-};
+  core: TParserCoreToken
+  [key: string]: TParserCoreToken | TParserToken
+}
 
 export class Parser {
-  protected tokens: TParserTokens;
-
-  protected parse(tokens: TTokenizeResult[]): string {
-    return '';
-  }
+  protected tokens: TParserTokens
 
   private parsePattern(pattern: string): PatternFabric {
     const join = (data: TTokenizeResult[]): TTokenizeResult[] => {
@@ -140,16 +136,20 @@ export class Parser {
         return
       }
 
-      const parsedPattern = this.parsePattern((this.tokens[tokenName] as TParserToken).pattern)
+      const parsedPattern = this.parsePattern(
+        (this.tokens[tokenName] as TParserToken).pattern
+      )
 
       tokens.push(
         new Token(
           tokenName,
           parsedPattern,
           (this.tokens[tokenName] as TParserToken).close
-            ? tokens.find((t) => t.name === (this.tokens[tokenName] as TParserToken).close)
+            ? tokens.find(
+                (t) => t.name === (this.tokens[tokenName] as TParserToken).close
+              )
             : null,
-            (this.tokens[tokenName] as TParserToken).inner
+          (this.tokens[tokenName] as TParserToken).inner
             ? (this.tokens[tokenName] as TParserToken).inner.map((t) =>
                 tokens.find((token) => token.name === t)
               )

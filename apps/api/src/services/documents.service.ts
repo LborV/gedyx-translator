@@ -179,10 +179,6 @@ export class DocumentsService {
 
     await this.documentsRepository.save(document)
 
-    // TODO: make there parser strategy
-    // const preParser = new normalizeHtml()
-    // const preTokenizer = preParser.init()
-    // const a = preTokenizer.tokenize(unescape(data.value))
     const tokenizer = new html().init()
     const tokens = tokenizer.tokenize(unescape(data.value))
 
@@ -196,9 +192,11 @@ export class DocumentsService {
     coreToken.version = 1
     coreToken.hash = document.hash
 
-    for (const token of tokens) {
-      coreToken.children.push(await this.saveToken(token, document))
-    }
+    await Promise.all(
+      tokens.map(async (token) => {
+        coreToken.children.push(await this.saveToken(token, document))
+      })
+    )
 
     this.tokensRepository.save(coreToken)
 

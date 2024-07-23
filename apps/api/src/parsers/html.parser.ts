@@ -11,6 +11,34 @@ export class html extends Parser {
     const newData = []
 
     data.forEach((token) => {
+      if (token.name === 'openTag') {
+        if (token.subTokens) {
+          const tagNameToken = token.subTokens['tagName']
+
+          if (tagNameToken) {
+            for (let i = 0; i < this.nonClosingPattern.length; i++) {
+              if (tagNameToken[0].value == this.nonClosingPattern[i]) {
+                token.name = 'selfClosingTag'
+                break
+              }
+            }
+          }
+        }
+      } else if (token.name === 'closeTag') {
+        if (
+          this.nonClosingPattern.includes(
+            token.value
+              .replace('<', '')
+              .replace('>', '')
+              .replace('/', '')
+              .split(' ')[0]
+              .trim()
+          )
+        ) {
+          token.name = 'selfClosingTag'
+        }
+      }
+
       if (token.name === 'textData') {
         if (newData.length && newData[newData.length - 1].name === 'textData') {
           newData[newData.length - 1].value += token.value
@@ -28,7 +56,52 @@ export class html extends Parser {
       newData.push(token)
     })
 
-    return newData
+    const makeTree = (
+      data: TTokenizeResult[],
+      node: TTokenizeResult = {
+        name: 'core',
+        value: '',
+        childs: []
+      },
+      index: number = 0
+    ): { result: TTokenizeResult; index: number } => {
+      for (let i = index; i < data.length; i++) {
+        const token = data[i]
+
+        switch (token.name) {
+          case 'textData':
+            if (node.name === 'textData') {
+              node.value += token.value
+              break
+            }
+
+            node.childs.push(token)
+            break
+          case 'openTag':
+            const { result, index } = makeTree(data, token, i + 1)
+
+            node.childs.push(result)
+            i = index
+            break
+          case 'closeTag':
+            if (node.name === 'core') {
+              node.childs.push(token)
+              break
+            }
+
+            node.closeToken = token
+
+            return { result: node, index: i }
+          default:
+            node.childs.push(token)
+            break
+        }
+      }
+
+      return { result: node, index: data.length }
+    }
+
+    return makeTree(newData).result.childs
   }
 
   tagNamePrettier(data: TTokenizeResult) {
@@ -55,11 +128,8 @@ export class html extends Parser {
     comment: {
       pattern: '<!--*-->'
     },
-    nonClosingTags: {
-      pattern: `</|[${this.nonClosingPattern}]*(<,=,${this.nonClosingPattern})>`
-    },
     closeTag: {
-      pattern: `</*(<,=,${this.nonClosingPattern})>`
+      pattern: `<*(<)/*(<)>`
     },
     attribute: {
       pattern: ` *=|['*',"*"]`,
@@ -71,17 +141,16 @@ export class html extends Parser {
     },
     openTag: {
       pattern: '<*(/,<)>',
-      close: 'closeTag',
       inner: ['attribute', 'tagName']
     },
     scriptTag: {
-      pattern: '<script*</script>'
+      pattern: '<script*script>'
     },
     styleTag: {
-      pattern: '<style*</style>'
+      pattern: '<style*style>'
     },
     svgTag: {
-      pattern: '<svg*</svg>'
+      pattern: '<svg*svg>'
     },
     core: {
       tokens: [
@@ -89,7 +158,8 @@ export class html extends Parser {
         'svgTag',
         'scriptTag',
         'styleTag',
-        'nonClosingTags',
+        'selfClosingTag',
+        'closeTag',
         'openTag',
         'textData'
       ],

@@ -8,6 +8,7 @@ import { html } from '../parsers/html.parser'
 import { Tokens } from '../entities/tokens.entity'
 import { TTokenizeResult } from '../classes/tokenizer.class'
 import { unescape } from 'querystring'
+import { DataSource, EntityManager } from 'typeorm'
 
 @Injectable()
 export class DocumentsService {
@@ -17,12 +18,14 @@ export class DocumentsService {
     @InjectRepository(Documents)
     private documentsRepository: Repository<Documents>,
     @InjectRepository(Tokens)
-    private tokensRepository: Repository<Tokens>
+    private tokensRepository: Repository<Tokens>,
+    private dataSource: DataSource
   ) {}
 
   private async getTokenWithChild(id: number): Promise<Tokens> {
     const token = await this.tokensRepository.findOne({
-      relations: ['children', 'closeToken', 'subTokens'],
+      // relations: ['children', 'closeToken', 'subTokens'],
+      relations: ['children', 'closeToken'],
       where: {
         id: id
       }
@@ -32,9 +35,9 @@ export class DocumentsService {
       throw new Error('Token not found')
     }
 
-    const children = []
-    const subTokens = []
-    let closeToken = null
+    const children: Tokens[] = []
+    // const subTokens: Tokens[] = []
+    let closeToken: Tokens = null
 
     for (const child in token.children) {
       const childToken = await this.getTokenWithChild(token.children[child].id)
@@ -42,19 +45,20 @@ export class DocumentsService {
       children.push(childToken)
     }
 
-    for (const subToken in token.subTokens) {
-      const subTokenData = await this.getTokenWithChild(
-        token.subTokens[subToken].id
-      )
+    // for (const subToken in token.subTokens) {
+    //   const subTokenData = await this.getTokenWithChild(
+    //     token.subTokens[subToken].id
+    //   )
 
-      subTokens.push(subTokenData)
-    }
+    //   // subTokens.push(subTokenData)
+    // }
 
     if (token.closeToken) {
       closeToken = await this.getTokenWithChild(token.closeToken.id)
     }
 
     token.children = children
+    // token.subTokens = subTokens
     token.closeToken = closeToken
 
     return token
@@ -99,6 +103,7 @@ export class DocumentsService {
   private async saveToken(
     tokenData: TTokenizeResult,
     document: Documents,
+    manager: EntityManager,
     level: number = 1
   ): Promise<Tokens> {
     const token = new Tokens()
@@ -116,6 +121,7 @@ export class DocumentsService {
       const closeToken = await this.saveToken(
         tokenData.closeToken,
         document,
+        manager,
         level
       )
 
@@ -124,7 +130,7 @@ export class DocumentsService {
 
     if (tokenData.childs.length) {
       for (const child of tokenData.childs) {
-        const childToken = await this.saveToken(child, document, level + 1)
+        const childToken = await this.saveToken(child, document, manager, level + 1)
 
         token.children.push(childToken)
       }
@@ -133,14 +139,14 @@ export class DocumentsService {
     if (tokenData.subTokens && Object.keys(tokenData.subTokens).length) {
       for (const subTokensGroup of Object.values(tokenData.subTokens)) {
         for (const subToken of subTokensGroup) {
-          const subTokenData = await this.saveToken(subToken, document, level)
+          const subTokenData = await this.saveToken(subToken, document, manager, level)
 
           token.subTokens.push(subTokenData)
         }
       }
     }
 
-    return this.tokensRepository.save(token)
+    return await manager.save(token)
   }
 
   async create(
@@ -177,28 +183,33 @@ export class DocumentsService {
       throw new Error('Document already exists')
     }
 
-    await this.documentsRepository.save(document)
+    await this.dataSource.transaction(async manager => {
+      await manager.save(document)
 
-    const tokenizer = new html().init()
-    const tokens = tokenizer.tokenize(unescape(data.value))
+      const tokenizer = new html().init()
+      const tokens = tokenizer.tokenize(unescape(data.value))
 
-    const coreToken = new Tokens()
+      const coreToken = new Tokens()
 
-    coreToken.name = 'core'
-    coreToken.level = 0
-    coreToken.children = []
-    coreToken.document = document
-    coreToken.value = ''
-    coreToken.version = 1
-    coreToken.hash = document.hash
+      coreToken.name = 'core'
+      coreToken.level = 0
+      coreToken.children = []
+      coreToken.document = document
+      coreToken.value = ''
+      coreToken.version = 1
+      coreToken.hash = document.hash
 
-    await Promise.all(
-      tokens.map(async (token) => {
-        coreToken.children.push(await this.saveToken(token, document))
-      })
-    )
+      // await Promise.all(
+        // tokens.map(async (token) => {
+        
+      for(const token of tokens) {
+        coreToken.children.push(await this.saveToken(token, document, manager))
+      }
+        // })
+      // )
 
-    this.tokensRepository.save(coreToken)
+      await manager.save(coreToken)
+    })
 
     return document
   }

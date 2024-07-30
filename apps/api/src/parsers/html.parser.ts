@@ -31,8 +31,8 @@ export class html extends Parser {
               .replace('<', '')
               .replace('>', '')
               .replace('/', '')
-              .split(' ')[0]
               .trim()
+              .split(' ')[0]
           )
         ) {
           token.name = 'selfClosingTag'
@@ -122,7 +122,7 @@ export class html extends Parser {
   }
 
   protected nonClosingPattern =
-    'br,img,input,hr,meta,link,area,base,col,embed,source,track,wbr'
+    'br,img,input,hr,meta,link,area,base,col,embed,source,track,wbr'.split(',')
 
   tokens = {
     comment: {
@@ -151,6 +151,9 @@ export class html extends Parser {
     },
     svgTag: {
       pattern: '<svg*svg>'
+    },
+    iframeTag: {
+      pattern: '<iframe*iframe>'
     },
     core: {
       tokens: [

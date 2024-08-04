@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "copy-static-files": "copyfiles -u 1 apps/api/src/html/* dist/apps/api/src/",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -28,6 +29,7 @@
     "@nestjs/typeorm": "^10.0.2",
     "@types/imurmurhash": "^0.1.4",
     "class-transformer": "^0.5.1",
+    "copyfiles": "^2.4.1",
     "imurmurhash": "^0.1.4",
     "mqtt": "^5.7.0",
     "mysql": "^2.18.1",

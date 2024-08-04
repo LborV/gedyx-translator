@@ -16,7 +16,9 @@
 </ul>
 <h2 class="code-line" data-line-start="14" data-line-end="15"><a id="___14"></a>А что дальше?</h2>
 <p class="has-line-data" data-line-start="15" data-line-end="16">Я получил кучу опыта пытаясь написать свой токенизатор и я не собираюсь забрасывать эту идею. Я просто устал конкретно с этим проектом, думаю когда-то я смогу вернуться к нему, но явно переосмыслев ключевые моменты. Я вижу тут потенциал, так как можно в теории из любого формата данных их переводить в другой и всё что для этого нужно - написать правила токенизации, что даже сейчас не составляет большого труда для нормальных данных. Вот пример для того же html:</p>
-<pre><code class="has-line-data" data-line-start="17" data-line-end="194" class="language-ts"><span class="hljs-keyword">import</span> { Parser, TParserTokens } from <span class="hljs-string">'../classes/parser.class'</span>
+<p class="has-line-data" data-line-start="17" data-line-end="19">&lt;details&gt;<br>
+&lt;summary&gt;Нажмите, чтобы раскрыть&lt;/summary&gt;</p>
+<pre><code class="has-line-data" data-line-start="20" data-line-end="197" class="language-ts"><span class="hljs-keyword">import</span> { Parser, TParserTokens } from <span class="hljs-string">'../classes/parser.class'</span>
 <span class="hljs-keyword">import</span> { TTokenizeResult } from <span class="hljs-string">'../classes/tokenizer.class'</span>
 
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> html extends Parser {
@@ -193,41 +195,35 @@
 }
 
 </span></code></pre>
-<p class="has-line-data" data-line-start="194" data-line-end="195">Пока что этот проект уходит на долгую паузу.</p>
+<p class="has-line-data" data-line-start="197" data-line-end="199">&lt;/details&gt;<br>
+Пока что этот проект уходит на долгую паузу.</p>
 <hr>
-<h1 class="code-line" data-line-start="197" data-line-end="198"><a id="____197"></a>Что-то что можно потыкать</h1>
+<h1 class="code-line" data-line-start="201" data-line-end="202"><a id="____201"></a>Что-то что можно потыкать</h1>
 <ol>
-<li class="has-line-data" data-line-start="198" data-line-end="207">Для начала надо создать свой проект (просьба в качестве названия проекта использовать ваше имя + дата, чтобы в случае каких-то обсуждений было проще находить)<br>
-<code>PUT localhost:3000/api/project</code><pre><code class="has-line-data" data-line-start="201" data-line-end="206">{
+<li class="has-line-data" data-line-start="202" data-line-end="211">Для начала надо создать свой проект (просьба в качестве названия проекта использовать ваше имя + дата, чтобы в случае каких-то обсуждений было проще находить)<br>
+<code>PUT 82.193.95.91:3000/api/project</code><pre><code class="has-line-data" data-line-start="205" data-line-end="210">{
     &quot;name&quot;: &quot;BORIS0408&quot;,
     &quot;companyId&quot;: 1
 }
 </code></pre>
 <blockquote>
-<p class="has-line-data" data-line-start="206" data-line-end="207">companyId здесь больше для примера - это должнен быть мерчант/лицензия - тот кто платит бабки</p>
+<p class="has-line-data" data-line-start="210" data-line-end="211">companyId здесь больше для примера - это должнен быть мерчант/лицензия - тот кто платит бабки</p>
 </blockquote>
 </li>
-<li class="has-line-data" data-line-start="207" data-line-end="210">Затем надо создать документ - в этот момент он как раз будет токенизирован парсером<br>
-<code>PUT localhost:3000/api/document/{PROJECT_ID}</code>
+<li class="has-line-data" data-line-start="211" data-line-end="214">Затем надо создать документ - в этот момент он как раз будет токенизирован парсером<br>
+<code>PUT 82.193.95.91:3000/api/document/{PROJECT_ID}</code>
 <blockquote>
-<p class="has-line-data" data-line-start="209" data-line-end="210">PROJECT_ID - вы получили в предыдущем запросе, когда создавали проект (поле id)</p>
+<p class="has-line-data" data-line-start="213" data-line-end="214">PROJECT_ID - вы получили в предыдущем запросе, когда создавали проект (поле id)</p>
 </blockquote>
 </li>
-<li class="has-line-data" data-line-start="210" data-line-end="214">Дальше получить дерево токенов запросом<br>
-<code>GET localhost:3000/api/document/{DOCUMENT_ID}</code>
+<li class="has-line-data" data-line-start="214" data-line-end="218">Дальше получить дерево токенов запросом<br>
+<code>GET 82.193.95.91:3000/api/document/{DOCUMENT_ID}</code>
 <blockquote>
-<p class="has-line-data" data-line-start="212" data-line-end="214">DOCUMENT_ID - вы получили в предыдущем запросе (поле id)<br>
+<p class="has-line-data" data-line-start="216" data-line-end="218">DOCUMENT_ID - вы получили в предыдущем запросе (поле id)<br>
 дерево токенов - это JSON обьект. Мне проще просматривать его в VS Code. Делаете запрос курлом и сохраняете в файл, максимально большой документ у меня был 3.5Мб.</p>
 </blockquote>
 </li>
 </ol>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
 <br>
 <br>
 <br>

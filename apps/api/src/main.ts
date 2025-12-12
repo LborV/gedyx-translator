@@ -8,7 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   const configService = app.get(ConfigService)
 
-  app.use(bodyParser.json({limit: '50mb'}));
+  app.use(bodyParser.json({ limit: '50mb' }))
 
   // await app.connectMicroservice<MicroserviceOptions>({
   //   transport: Transport.MQTT,

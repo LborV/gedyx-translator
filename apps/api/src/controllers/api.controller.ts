@@ -25,7 +25,14 @@ export class ApiController {
 
   @Get()
   async get() {
-    const htmlFilePath = join(__dirname, '..', 'api', 'src', 'html', 'index.html');
+    const htmlFilePath = join(
+      __dirname,
+      '..',
+      'api',
+      'src',
+      'html',
+      'index.html'
+    )
 
     return readFileSync(htmlFilePath, 'utf8')
   }

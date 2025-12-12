@@ -130,7 +130,12 @@ export class DocumentsService {
 
     if (tokenData.childs.length) {
       for (const child of tokenData.childs) {
-        const childToken = await this.saveToken(child, document, manager, level + 1)
+        const childToken = await this.saveToken(
+          child,
+          document,
+          manager,
+          level + 1
+        )
 
         token.children.push(childToken)
       }
@@ -139,7 +144,12 @@ export class DocumentsService {
     if (tokenData.subTokens && Object.keys(tokenData.subTokens).length) {
       for (const subTokensGroup of Object.values(tokenData.subTokens)) {
         for (const subToken of subTokensGroup) {
-          const subTokenData = await this.saveToken(subToken, document, manager, level)
+          const subTokenData = await this.saveToken(
+            subToken,
+            document,
+            manager,
+            level
+          )
 
           token.subTokens.push(subTokenData)
         }
@@ -183,7 +193,7 @@ export class DocumentsService {
       throw new Error('Document already exists')
     }
 
-    await this.dataSource.transaction(async manager => {
+    await this.dataSource.transaction(async (manager) => {
       await manager.save(document)
 
       const tokenizer = new html().init()
@@ -200,12 +210,12 @@ export class DocumentsService {
       coreToken.hash = document.hash
 
       // await Promise.all(
-        // tokens.map(async (token) => {
-        
-      for(const token of tokens) {
+      // tokens.map(async (token) => {
+
+      for (const token of tokens) {
         coreToken.children.push(await this.saveToken(token, document, manager))
       }
-        // })
+      // })
       // )
 
       await manager.save(coreToken)

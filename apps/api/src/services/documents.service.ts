@@ -9,6 +9,12 @@ import { Tokens } from '../entities/tokens.entity'
 import { TTokenizeResult } from '../classes/tokenizer.class'
 import { unescape } from 'querystring'
 import { DataSource, EntityManager } from 'typeorm'
+import {
+  flattenTree,
+  buildTreeFromFlat,
+  groupByGeneration,
+  FlatToken
+} from '../parsers/token-tree'
 
 @Injectable()
 export class DocumentsService {
@@ -22,141 +28,72 @@ export class DocumentsService {
     private dataSource: DataSource
   ) {}
 
-  private async getTokenWithChild(id: number): Promise<Tokens> {
-    const token = await this.tokensRepository.findOne({
-      // relations: ['children', 'closeToken', 'subTokens'],
-      relations: ['children', 'closeToken'],
-      where: {
-        id: id
-      }
-    })
-
-    if (!token) {
-      throw new Error('Token not found')
-    }
-
-    const children: Tokens[] = []
-    // const subTokens: Tokens[] = []
-    let closeToken: Tokens = null
-
-    for (const child in token.children) {
-      const childToken = await this.getTokenWithChild(token.children[child].id)
-
-      children.push(childToken)
-    }
-
-    // for (const subToken in token.subTokens) {
-    //   const subTokenData = await this.getTokenWithChild(
-    //     token.subTokens[subToken].id
-    //   )
-
-    //   // subTokens.push(subTokenData)
-    // }
-
-    if (token.closeToken) {
-      closeToken = await this.getTokenWithChild(token.closeToken.id)
-    }
-
-    token.children = children
-    // token.subTokens = subTokens
-    token.closeToken = closeToken
-
-    return token
-  }
-
-  async get(id: number, version: number): Promise<Tokens[]> {
+  async get(id: number, version: number): Promise<TTokenizeResult[]> {
     const document = await this.documentsRepository.findOne({
-      where: {
-        id: id
-      }
+      where: { id }
     })
 
     if (!document) {
       throw new Error('Document not found')
     }
 
-    const coreToken = await this.tokensRepository.findOne({
-      relations: ['children'],
-      where: {
-        document: document,
-        version: version,
-        level: 0,
-        name: 'core'
-      }
+    // Весь документ читается одним запросом; порядок узлов задаёт position.
+    const tokens = await this.tokensRepository.find({
+      where: { document: { id }, version },
+      order: { position: 'ASC' }
     })
 
-    if (!coreToken) {
+    if (!tokens.length) {
       throw new Error('Document not found')
     }
 
-    const childTokens = []
-
-    for (const child of coreToken.children) {
-      childTokens.push(await this.getTokenWithChild(child.id))
-    }
-
-    coreToken.children = childTokens
-
-    return [coreToken]
+    return buildTreeFromFlat(tokens)
   }
 
-  private async saveToken(
-    tokenData: TTokenizeResult,
+  /** Пакетно сохраняет плоский список узлов: предки раньше потомков, без N+1 на узел. */
+  private async persistTokens(
+    rows: FlatToken[],
     document: Documents,
-    manager: EntityManager,
-    level: number = 1
-  ): Promise<Tokens> {
-    const token = new Tokens()
+    version: number,
+    manager: EntityManager
+  ): Promise<void> {
+    const entityById = new Map<number, Tokens>()
 
-    token.name = tokenData.name
-    token.value = JSON.stringify(tokenData.value)
-    token.hash = MurmurHash3(tokenData.value).result().toString(16)
-    token.version = 1
-    token.document = document
-    token.children = []
-    token.subTokens = []
-    token.level = level
+    for (const row of rows) {
+      const token = new Tokens()
 
-    if (tokenData.closeToken) {
-      const closeToken = await this.saveToken(
-        tokenData.closeToken,
-        document,
-        manager,
-        level
-      )
+      token.name = row.name
+      token.value = row.value
+      token.hash = MurmurHash3(row.value).result().toString(16)
+      token.version = version
+      token.document = document
+      token.relation = row.relation
+      token.position = row.position
+      token.level = row.level
 
-      token.closeToken = closeToken
+      entityById.set(row.id, token)
     }
 
-    if (tokenData.childs.length) {
-      for (const child of tokenData.childs) {
-        const childToken = await this.saveToken(
-          child,
-          document,
-          manager,
-          level + 1
-        )
+    // Пакетная многострочная вставка поколение за поколением: у каждого
+    // потомка родитель уже вставлен и получил id. Запросов O(глубины), а не
+    // по одному на узел. Поколение дробится на чанки, чтобы не упереться в
+    // лимит пакета MySQL на очень крупных документах.
+    const CHUNK = 500
 
-        token.children.push(childToken)
+    for (const generation of groupByGeneration(rows)) {
+      const batch = generation.map((row) => {
+        const token = entityById.get(row.id)
+
+        token.parentId =
+          row.parentId != null ? entityById.get(row.parentId).id : null
+
+        return token
+      })
+
+      for (let i = 0; i < batch.length; i += CHUNK) {
+        await manager.insert(Tokens, batch.slice(i, i + CHUNK))
       }
     }
-
-    if (tokenData.subTokens && Object.keys(tokenData.subTokens).length) {
-      for (const subTokensGroup of Object.values(tokenData.subTokens)) {
-        for (const subToken of subTokensGroup) {
-          const subTokenData = await this.saveToken(
-            subToken,
-            document,
-            manager,
-            level
-          )
-
-          token.subTokens.push(subTokenData)
-        }
-      }
-    }
-
-    return await manager.save(token)
   }
 
   async create(
@@ -197,28 +134,10 @@ export class DocumentsService {
       await manager.save(document)
 
       const tokenizer = new html().init()
-      const tokens = tokenizer.tokenize(unescape(data.value))
+      const tree = tokenizer.tokenize(unescape(data.value))
+      const rows = flattenTree(tree)
 
-      const coreToken = new Tokens()
-
-      coreToken.name = 'core'
-      coreToken.level = 0
-      coreToken.children = []
-      coreToken.document = document
-      coreToken.value = ''
-      coreToken.version = 1
-      coreToken.hash = document.hash
-
-      // await Promise.all(
-      // tokens.map(async (token) => {
-
-      for (const token of tokens) {
-        coreToken.children.push(await this.saveToken(token, document, manager))
-      }
-      // })
-      // )
-
-      await manager.save(coreToken)
+      await this.persistTokens(rows, document, 1, manager)
     })
 
     return document
